@@ -8,7 +8,10 @@ const PaymentForm = ({ theme, selectedpaid }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Convert file to Base64
+  const Plan = localStorage.getItem("title");
+  const Price = localStorage.getItem("price");
+
+  // Convert file → Base64
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -16,8 +19,7 @@ const PaymentForm = ({ theme, selectedpaid }) => {
       reader.onload = () => resolve(reader.result.split(",")[1]);
       reader.onerror = (error) => reject(error);
     });
-const Plan=localStorage.getItem("title")
-const Price=localStorage.getItem("price")
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -31,22 +33,40 @@ const Price=localStorage.getItem("price")
     try {
       const fileBase64 = await toBase64(file);
 
-      // ✅ Netlify endpoint
-      const response = await fetch("/.netlify/functions/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
-          fileBase64,
-          plan: Plan,   // static for now
-          price: Price,            // static for now
-          email,
-          whatsapp,
-          transactionId,
-        }),
-      });
+      const buffer = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
+      const blob = new Blob([buffer], { type: file.type });
 
-      const data = await response.json();
+      const webhookUrl = "https://discord.com/api/webhooks/1419305076610175076/SOqNQ_cpDMqkWzc3odG-p6RMi7oz6C8Nn2IY6bxWNmuPwQMezSnMe66EH9fHfzK1CKkY"; 
+
+      const payload = {
+        username: "Payment Bot",
+        embeds: [
+          {
+            title: "💸 New Payment Proof",
+            color: 0x12bbb6,
+            fields: [
+              { name: "📄 Filename", value: file.name, inline: true },
+              { name: "💼 Plan", value: Plan || "N/A", inline: true },
+              { name: "💰 Price", value: `$${Price || "N/A"}`, inline: true },
+              { name: "📧 Email", value: email, inline: false },
+              { name: "📱 WhatsApp", value: whatsapp || "Not provided", inline: false },
+              { name: "🆔 Transaction ID", value: transactionId || "Not provided", inline: false },
+            ],
+            image: { url: `attachment://${file.name}` },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
+
+      // FormData with file
+      const form = new FormData();
+      form.append("payload_json", JSON.stringify(payload));
+      form.append("file", blob, file.name);
+
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        body: form,
+      });
 
       if (response.ok) {
         toast.success("✅ Payment Proof Uploaded Successfully!");
@@ -55,11 +75,11 @@ const Price=localStorage.getItem("price")
         setWhatsapp("");
         setFile(null);
       } else {
-        toast.error(`❌ Error: ${data.error || "Something went wrong"}`);
+        toast.error("❌ Error sending to Discord");
       }
     } catch (error) {
       console.error(error);
-      toast.error("❌ Server error");
+      toast.error("❌ Client error");
     } finally {
       setLoading(false);
     }
@@ -70,20 +90,15 @@ const Price=localStorage.getItem("price")
       className={`flex flex-col max-w-[600px] w-full mx-auto gap-9 ${
         selectedpaid ? "block" : "hidden"
       }`}
-      data-aos="zoom-in"
-      data-aos-duration="1000"
     >
       <Toaster position="top-center" />
-
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <input
           type="number"
           placeholder="Transaction ID"
           value={transactionId}
           onChange={(e) => setTransactionId(e.target.value)}
-          className={`${
-            theme && "placeholder-customBlack"
-          } w-full px-4 py-3 rounded-lg backdrop-blur-sm bg-transparent border border-[#12BBB6]/50 focus:outline-none focus:ring-2 focus:ring-[#12BBB6]`}
+          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
         />
 
         <input
@@ -92,9 +107,7 @@ const Price=localStorage.getItem("price")
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={`${
-            theme && "placeholder-customBlack"
-          } w-full px-4 py-3 rounded-lg backdrop-blur-sm bg-transparent border border-[#12BBB6]/50 focus:outline-none focus:ring-2 focus:ring-[#12BBB6]`}
+          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
         />
 
         <input
@@ -102,25 +115,23 @@ const Price=localStorage.getItem("price")
           placeholder="WhatsApp Number"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className={`${
-            theme && "placeholder-customBlack"
-          } w-full px-4 py-3 rounded-lg backdrop-blur-sm bg-transparent border border-[#12BBB6]/50 focus:outline-none focus:ring-2 focus:ring-[#12BBB6]`}
+          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
         />
 
-        <div className="flex flex-col gap-1">
+        <div>
           <label className="text-lg mb-2">Payment Proof</label>
           <input
             required
             type="file"
             onChange={(e) => setFile(e.target.files[0])}
-            className="w-full flex flex-col px-4 py-2 rounded-lg backdrop-blur-sm bg-transparent border border-[#12BBB6]/50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#12BBB6] file:text-white hover:file:bg-[#0ea59d] cursor-pointer"
+            className="w-full"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg bg-[#12BBB6] font-semibold text-lg transition-all duration-300 hover:bg-[#0ea59d] text-white hover:scale-[1.02] shadow-lg shadow-[#12BBB6]/40 disabled:opacity-50"
+          className="w-full py-3 rounded-lg bg-[#12BBB6] text-white font-semibold"
         >
           {loading ? "Uploading..." : "Submit Payment"}
         </button>
