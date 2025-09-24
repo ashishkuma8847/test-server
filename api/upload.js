@@ -1,5 +1,3 @@
-import axios from "axios";
-
 // api/upload.js
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -35,11 +33,17 @@ export default async function handler(req, res) {
         },
       ],
     };
-    const discordRes = await axios.post(webhookUrl, payload, {
+    const discordRes = await fetch(webhookUrl, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    return res.status(200).json({ message: "✅ Payment sent successfully", data: discordRes.data });
+    if (!discordRes.ok) {
+      return res.status(502).json({ error: "Failed to send to Discord" });
+    }
+
+    return res.status(200).json({ message: "✅ Payment sent successfully" });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
