@@ -1,3 +1,5 @@
+import axios from "axios";
+
 // api/upload.js
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -13,7 +15,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // const buffer = Buffer.from(fileBase64, "base64");
     const webhookUrl = "https://discord.com/api/webhooks/1419305076610175076/SOqNQ_cpDMqkWzc3odG-p6RMi7oz6C8Nn2IY6bxWNmuPwQMezSnMe66EH9fHfzK1CKkY";
 
     const payload = {
@@ -23,7 +24,6 @@ export default async function handler(req, res) {
           title: "💸 New Payment Proof",
           color: 0x12bbb6,
           fields: [
-            // { name: "📄 Filename", value: `[${filename}](attachment://${filename})`, inline: true },
             { name: "💼 Plan", value: plan || "N/A", inline: true },
             { name: "💰 Price", value: `$${price || "N/A"}`, inline: true },
             { name: "📧 Email", value: email, inline: false },
@@ -35,23 +35,11 @@ export default async function handler(req, res) {
         },
       ],
     };
-
-    // const form = new FormData();
-    // form.append("payload_json", JSON.stringify(payload));
-    // form.append("file", buffer, filename);
-
-    // const discordRes = await fetch(webhookUrl, { method: "POST", body: form });
-    const discordRes = await fetch(webhookUrl, {
-      method: "POST",
+    const discordRes = await axios.post(webhookUrl, payload, {
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
     });
 
-    if (!discordRes.ok) {
-      return res.status(502).json({ error: "Failed to send to Discord" });
-    }
-
-    return res.status(200).json({ message: "✅ Payment sent successfully" });
+    return res.status(200).json({ message: "✅ Payment sent successfully", data: discordRes.data });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
