@@ -98,7 +98,7 @@ const PaymentForm = ({ theme, selectedpaid }) => {
           placeholder="Transaction ID"
           value={transactionId}
           onChange={(e) => setTransactionId(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
+          className="w-full px-4 py-3 rounded-lg border bg-transparent border-[#12BBB6]/50"
         />
 
         <input
@@ -107,7 +107,7 @@ const PaymentForm = ({ theme, selectedpaid }) => {
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
+          className="w-full px-4 py-3 rounded-lg border bg-transparent border-[#12BBB6]/50"
         />
 
         <input
@@ -115,7 +115,7 @@ const PaymentForm = ({ theme, selectedpaid }) => {
           placeholder="WhatsApp Number"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-[#12BBB6]/50"
+          className="w-full px-4 py-3 rounded-lg border bg-transparent   border-[#12BBB6]/50"
         />
 
         <div>
@@ -124,14 +124,14 @@ const PaymentForm = ({ theme, selectedpaid }) => {
             required
             type="file"
             onChange={(e) => setFile(e.target.files[0])}
-            className="w-full"
+            className="w-full file:bg-customTeal file:border-none file:rounded-lg file:px-4 file:py-2 font-poppins file:text-white"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg bg-[#12BBB6] text-white font-semibold"
+          className="w-full py-3 rounded-lg  bg-[#12BBB6] text-white font-semibold"
         >
           {loading ? "Uploading..." : "Submit Payment"}
         </button>
