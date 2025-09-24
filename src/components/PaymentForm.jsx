@@ -1,5 +1,14 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
+
+/**
+ * PaymentForm
+ * - Sends base64 file + metadata to server at /api/upload
+ * - Server should handle sending to Discord (so webhook is NOT exposed on client)
+ *
+ * Usage: <PaymentForm theme={true} selectedpaid={true} />
+ */
 
 const PaymentForm = ({ theme, selectedpaid }) => {
   const [transactionId, setTransactionId] = useState("");
@@ -7,70 +16,58 @@ const PaymentForm = ({ theme, selectedpaid }) => {
   const [whatsapp, setWhatsapp] = useState("");
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [error, setError] = useState(null);
+  const Plan = typeof window !== "undefined" ? localStorage.getItem("title") : null;
+  const Price = typeof window !== "undefined" ? localStorage.getItem("price") : null;
+  console.log(151, images);
 
-  const Plan = localStorage.getItem("title");
-  const Price = localStorage.getItem("price");
-
-  // Convert file → Base64
+  // Convert file → Base64 (only the data portion, no mime prefix)
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onload = () => {
+        const result = reader.result || "";
+        const parts = result.split(",");
+        resolve(parts[1] || "");
+      };
       reader.onerror = (error) => reject(error);
     });
+
+  // Basic client-side file size guard (in bytes). Adjust as needed.
+  const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file || !email) {
+    if (!images || !email) {
       toast.error("⚠️ Please fill all required fields");
       return;
     }
 
+
+
     setLoading(true);
 
     try {
-      const fileBase64 = await toBase64(file);
 
-      const buffer = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
-      const blob = new Blob([buffer], { type: file.type });
-
-      const webhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK;
-      console.log(webhookUrl,"------------url")
-
-      const payload = {
-  username: "Payment Bot",
-  embeds: [
-    {
-      title: "💸 New Payment Proof",
-      color: 0x12bbb6,
-      fields: [
-        { 
-          name: "📄 Filename", 
-          value: `[${file.name}](attachment://${file.name})`, // 👈 clickable link
-          inline: true 
-        },
-        { name: "💼 Plan", value: Plan || "N/A", inline: true },
-        { name: "💰 Price", value: `$${Price || "N/A"}`, inline: true },
-        { name: "📧 Email", value: email, inline: false },
-        { name: "📱 WhatsApp", value: whatsapp || "Not provided", inline: false },
-        { name: "🆔 Transaction ID", value: transactionId || "Not provided", inline: false },
-      ],
-      timestamp: new Date().toISOString(),
-    },
-  ],
-};
-
-      // FormData with file
-      const form = new FormData();
-      form.append("payload_json", JSON.stringify(payload));
-      form.append("file", blob, file.name);
-
-      const response = await fetch(webhookUrl, {
+      // POST to your serverless function (server holds webhook)
+      const response = await fetch("/api/upload", {
         method: "POST",
-        body: form,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // filename: file.name,
+          image: images[0],
+          plan: Plan,
+          price: Price,
+          email,
+          whatsapp,
+          transactionId,
+        }),
       });
+
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
         toast.success("✅ Payment Proof Uploaded Successfully!");
@@ -79,16 +76,54 @@ const PaymentForm = ({ theme, selectedpaid }) => {
         setWhatsapp("");
         setFile(null);
       } else {
-        toast.error("❌ Error sending to Discord");
+        toast.error(`❌ Error: ${data.error || "Something went wrong"}`);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Client error:", error);
       toast.error("❌ Client error");
     } finally {
       setLoading(false);
     }
   };
+  const handleImageChange = async (event) => {
+    const files = event.target.files;
+    if (!files.length) return;
 
+    setLoading(true);
+    setError(null);
+
+    try {
+      const newImages = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // API Key from ImgBB (replace YOUR_API_KEY with your actual key)
+        const API_KEY = '8fde1ea6a0bc5fb0cde18eb19bd3673f';
+        const url = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
+
+        const data = await axios.post(url, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        console.log(651651, data);
+
+        if (data.data.success) {
+          newImages.push(data.data.data.url);
+        } else {
+          setError('Image upload failed!');
+        }
+      }
+      setImages((prevImages) => [...prevImages, ...newImages]);
+
+    } catch (err) {
+      setError('An error occurred during the upload.');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div
       className={`flex flex-col max-w-[600px] w-full mx-auto gap-9 ${selectedpaid ? "block" : "hidden"
@@ -118,7 +153,7 @@ const PaymentForm = ({ theme, selectedpaid }) => {
           placeholder="WhatsApp Number"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border bg-transparent   border-[#12BBB6]/50"
+          className="w-full px-4 py-3 rounded-lg border bg-transparent border-[#12BBB6]/50"
         />
 
         <div>
@@ -126,15 +161,18 @@ const PaymentForm = ({ theme, selectedpaid }) => {
           <input
             required
             type="file"
-            onChange={(e) => setFile(e.target.files[0])}
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
             className="w-full file:bg-customTeal file:border-none file:rounded-lg file:px-4 file:py-2 font-poppins file:text-white"
           />
+          <p className="text-sm text-gray-500 mt-2">Max file size: 4 MB</p>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg  bg-[#12BBB6] text-white font-semibold"
+          className="w-full py-3 rounded-lg bg-[#12BBB6] text-white font-semibold disabled:opacity-50"
         >
           {loading ? "Uploading..." : "Submit Payment"}
         </button>
