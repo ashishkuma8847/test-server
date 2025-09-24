@@ -36,7 +36,8 @@ const PaymentForm = ({ theme, selectedpaid }) => {
       const buffer = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
       const blob = new Blob([buffer], { type: file.type });
 
-      const webhookUrl = "https://discord.com/api/webhooks/1419305076610175076/SOqNQ_cpDMqkWzc3odG-p6RMi7oz6C8Nn2IY6bxWNmuPwQMezSnMe66EH9fHfzK1CKkY";
+      const webhookUrl = process.env.REACT_APP_DISCORD_WEBHOOK;
+      console.log(webhookUrl,"------------url")
 
       const payload = {
   username: "Payment Bot",
