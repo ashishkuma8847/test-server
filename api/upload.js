@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const webhookUrl = "https://discord.com/api/webhooks/1402137260861816933/V_YQYyoFDmM9f4WQVk1LdoHlOIe1aAdXaIZtpERtB4M_T3c4fZFk-vdaq9AuOExWYozd";
+    const webhookUrl = "https://discord.com/api/webhooks/1419305076610175076/SOqNQ_cpDMqkWzc3odG-p6RMi7oz6C8Nn2IY6bxWNmuPwQMezSnMe66EH9fHfzK1CKkY";
 
     const payload = {
       username: "Payment Bot",
