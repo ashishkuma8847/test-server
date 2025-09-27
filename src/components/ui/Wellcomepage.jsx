@@ -163,7 +163,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                       Eren Xites
                     </span>{' '}
                     <span data-aos="fade-up" data-aos-delay="800" className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-customTeal bg-clip-text text-transparent">
-                      Store
+                      Shop
                     </span>
                   </div>
                 </h1>
