@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast, Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 // ✅ Validation schema with Yup
 const PaymentSchema = Yup.object().shape({
@@ -21,6 +22,8 @@ const PaymentForm = ({ theme, selectedpaid }) => {
     typeof window !== "undefined" ? localStorage.getItem("title") : null;
   const Price =
     typeof window !== "undefined" ? localStorage.getItem("price") : null;
+
+  const navigate = useNavigate();
 
   // ✅ Upload images to imgbb
   const uploadImages = async (files) => {
@@ -84,14 +87,16 @@ const PaymentForm = ({ theme, selectedpaid }) => {
       toast.error("Error sending payment proof");
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        navigate("/sucessfull");
+      }, 2000)
     }
   };
 
   return (
     <div
-      className={`flex flex-col max-w-[600px] w-full mx-auto gap-9 ${
-        selectedpaid ? "block" : "hidden"
-      }`}
+      className={`flex flex-col max-w-[600px] w-full mx-auto gap-9 ${selectedpaid ? "block" : "hidden"
+        }`}
     >
       <Toaster position="top-center" />
 

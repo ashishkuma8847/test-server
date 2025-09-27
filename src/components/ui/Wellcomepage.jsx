@@ -1,9 +1,14 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Code2, Gem , Globe, UserStar  } from 'lucide-react';
+import { Code2, Gem, Globe, UserStar } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
+/* ---------------------------
+   ✅ Typewriter Effect Component
+   - Simulates typing text character by character
+   - Shows a blinking cursor "|"
+--------------------------- */
 const TypewriterEffect = ({ text }) => {
   const [displayText, setDisplayText] = useState('');
   
@@ -14,30 +19,40 @@ const TypewriterEffect = ({ text }) => {
         setDisplayText(text.slice(0, index));
         index++;
       } else {
-        clearInterval(timer);
+        clearInterval(timer); // Stop once all text is typed
       }
-    }, 150);
+    }, 150); // typing speed
     
     return () => clearInterval(timer);
   }, [text]);
 
   return (
-    <span className="inline-block ">
+    <span className="inline-block">
       {displayText}
-      <span className="animate-pulse">|</span>
+      <span className="animate-pulse">|</span> {/* Blinking cursor */}
     </span>
   );
 };
 
+/* ---------------------------
+   ✅ Background Visual Effects
+   - Gradient overlays with blur & animations
+--------------------------- */
 const BackgroundEffect = () => (
   <div className="absolute inset-0 z-10 overflow-hidden">
+    {/* Pulsing gradient */}
     <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-customTeal/20 blur-3xl animate-pulse" />
+    {/* Floating soft gradient */}
     <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/10 via-transparent to-customTeal/10 blur-2xl animate-float" />
   </div>
 );
 
+/* ---------------------------
+   ✅ Icon Button Component
+   - Gradient glow + scaling animation on hover
+--------------------------- */
 const IconButton = ({ Icon }) => (
-  <div className="relative group z-10 hover:scale-110 transition-transform  duration-300">
+  <div className="relative group z-10 hover:scale-110 transition-transform duration-300">
     <div className="absolute -inset-2 bg-gradient-to-r from-indigo-600 to-customTeal rounded-full blur opacity-30 group-hover:opacity-75 transition duration-300" />
     <div className="relative p-2 sm:p-3 bg-black/50 backdrop-blur-sm rounded-full border border-white/10">
       <Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-white" />
@@ -45,26 +60,34 @@ const IconButton = ({ Icon }) => (
   </div>
 );
 
+/* ---------------------------
+   ✅ Welcome Screen Component
+   - Loading screen with animated icons, title & typewriter effect
+   - Auto hides after 4.5s and calls `onLoadingComplete`
+--------------------------- */
 const WelcomeScreen = ({ onLoadingComplete }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize AOS animations
     AOS.init({
       duration: 1000,
       once: false,
       mirror: false,
     });
 
+    // Timer to hide the screen after 4.5s
     const timer = setTimeout(() => {
       setIsLoading(false);
       setTimeout(() => {
-        onLoadingComplete?.();
+        onLoadingComplete?.(); // Notify parent component
       }, 1000);
     }, 4500);
-    
+
     return () => clearTimeout(timer);
   }, [onLoadingComplete]);
 
+  // Animation variants for exit transition
   const containerVariants = {
     exit: {
       opacity: 0,
@@ -74,9 +97,9 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
         duration: 0.8,
         ease: "easeInOut",
         when: "beforeChildren",
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const childVariants = {
@@ -85,53 +108,59 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
       opacity: 0,
       transition: {
         duration: 0.4,
-        ease: "easeInOut"
-      }
-    }
+        ease: "easeInOut",
+      },
+    },
   };
 
   return (
     <AnimatePresence>
       {isLoading && (
         <motion.div
-          className="fixed inset-0 bg-[#030014]"
+          className="fixed inset-0 bg-[#030014]" // full-screen dark background
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit="exit"
           variants={containerVariants}
         >
+          {/* Gradient Background Effects */}
           <BackgroundEffect />
-          
+
+          {/* Centered Content */}
           <div className="relative min-h-screen z-10 flex items-center justify-center px-4">
             <div className="w-full max-w-4xl mx-auto">
-               <motion.div 
+              
+              {/* Top Icons */}
+              <motion.div
                 className="flex justify-center gap-3 sm:gap-4 md:gap-8 mb-6 sm:mb-8 md:mb-12"
                 variants={childVariants}
               >
-                {[Code2, UserStar , Gem ].map((Icon, index) => (
+                {[Code2, UserStar, Gem].map((Icon, index) => (
                   <div key={index} data-aos="fade-down" data-aos-delay={index * 200}>
                     <IconButton Icon={Icon} />
                   </div>
                 ))}
               </motion.div>
+
               {/* Welcome Text */}
-              <motion.div 
+              <motion.div
                 className="text-center mb-6 sm:mb-8 md:mb-12"
                 variants={childVariants}
               >
                 <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold space-y-2 sm:space-y-4">
                   <div className="mb-2 sm:mb-4">
+                    {/* "Welcome To" with gradient text */}
                     <span data-aos="fade-right" data-aos-delay="200" className="inline-block px-2 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                       Welcome
                     </span>{' '}
                     <span data-aos="fade-right" data-aos-delay="400" className="inline-block px-2 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                       To
-                    </span>{' '}
-                    
+                    </span>
                   </div>
                   <div>
+                    {/* Brand Name */}
                     <span data-aos="fade-up" data-aos-delay="600" className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-customTeal bg-clip-text text-transparent">
-                     Eren Xites
+                      Eren Xites
                     </span>{' '}
                     <span data-aos="fade-up" data-aos-delay="800" className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-customTeal bg-clip-text text-transparent">
                       Store
@@ -140,8 +169,8 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                 </h1>
               </motion.div>
 
-              {/* Website Link */}
-              <motion.div 
+              {/* Website Link with Typewriter Effect */}
+              <motion.div
                 className="text-center"
                 variants={childVariants}
                 data-aos="fade-up"
@@ -153,8 +182,9 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  {/* Glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-customTeal/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300" />
-                  <div className="relative flex items-center  gap-2 text-lg sm:text-xl md:text-2xl">
+                  <div className="relative flex items-center gap-2 text-lg sm:text-xl md:text-2xl">
                     <Globe className="w-4 h-4 mt-[7px] sm:w-5 sm:h-5 text-indigo-600" />
                     <span className="bg-gradient-to-r from-indigo-600 to-customTeal bg-clip-text text-transparent">
                       <TypewriterEffect text="www.eren-xites-store.com" />

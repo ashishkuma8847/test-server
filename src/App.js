@@ -20,13 +20,10 @@ function App() {
             />
           )}
         </AnimatePresence>
-
         {!showWelcome && (
           <>
           <Animated/>
-          {/* <AnimatedBackground/>  */}
             <Header/>
-
             <Routes>
               <Route path='/' element={<Home/>} />
               <Route path='/buy' element={<Buy/>} />
